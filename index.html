@@ -6,6 +6,7 @@
     <title>떠영이네 쿠알라룸푸르 여행 결정전!</title>
     <style>
         @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
+        @import url('https://webfontworld.github.io/gmarket/GmarketSans.css');
 
         body {
             font-family: 'Pretendard', sans-serif;
@@ -108,25 +109,43 @@
             font-weight: 600;
         }
 
-        /* 결과 화면 */
-        .result-box {
-            background-color: #f8fafc;
-            border-radius: 12px;
-            padding: 20px;
-            margin-bottom: 20px;
-            text-align: left;
-            border-left: 5px solid #0ea5e9;
+        /* 결과 화면 스타일 */
+        .result-header {
+            margin-bottom: 30px;
+            border-bottom: 2px dashed #e2e8f0;
+            padding-bottom: 20px;
         }
         
-        .result-label {
-            font-size: 14px;
-            color: #64748b;
-            margin-bottom: 4px;
-        }
-        .result-value {
-            font-size: 18px;
+        .result-type-title {
+            font-family: 'GmarketSans';
+            color: #0ea5e9;
+            font-size: 22px;
             font-weight: bold;
-            color: #0f172a;
+            margin-bottom: 15px;
+            line-height: 1.4;
+        }
+
+        .result-type-desc {
+            font-size: 15px;
+            line-height: 1.6;
+            color: #475569;
+            background-color: #f1f5f9;
+            padding: 15px;
+            border-radius: 12px;
+        }
+
+        .result-list-box {
+            text-align: left;
+            background-color: #fff;
+            margin-top: 20px;
+        }
+
+        .result-item {
+            margin-bottom: 12px;
+            font-size: 15px;
+            color: #334155;
+            line-height: 1.5;
+            padding-left: 10px;
         }
 
         .btn-restart {
@@ -139,6 +158,7 @@
             font-weight: bold;
             cursor: pointer;
             width: 100%;
+            margin-top: 20px;
         }
 
     </style>
@@ -149,30 +169,28 @@
     <div class="container" id="start-screen">
         <div style="font-size: 50px; margin-bottom: 10px;">👨‍👩‍👧</div>
         <h1>떠영이네 가족여행<br>맞춤 주문서</h1>
-        <p class="subtitle">엄마, 아빠! 우리가 갈 곳들을<br>직접 골라주세요.<br>가장 편하고 좋은 방법으로 모실게요!</p>
+        <p class="subtitle">엄마, 아빠! 우리가 갈 곳들을<br>직접 골라주세요.<br>결과에 따라 맞춤 일정을 짜드릴게요!</p>
         <button class="btn-restart" onclick="startSurvey()">선택 시작하기</button>
     </div>
 
     <!-- 설문 화면 -->
     <div class="container hidden" id="survey-screen">
         <div class="progress-bar"><div class="progress-fill" id="progress"></div></div>
-        
-        <div id="question-area">
-            <!-- 자바스크립트로 질문이 여기에 들어갑니다 -->
-        </div>
+        <div id="question-area"></div>
     </div>
 
     <!-- 결과 화면 -->
     <div class="container hidden" id="result-screen">
-        <h1 style="margin-bottom: 5px;">✅ 선택 완료!</h1>
-        <p class="subtitle">떠영이에게 이 화면을 캡쳐해서 보내주세요.</p>
+        <h1 style="margin-bottom: 5px;">✅ 분석 완료!</h1>
+        <p class="subtitle">우리 가족의 여행 스타일은?</p>
         
-        <div id="result-list"></div>
+        <div id="result-content"></div> <!-- 결과가 여기에 표시됨 -->
 
         <button class="btn-restart" onclick="location.reload()">다시 고르기</button>
     </div>
 
     <script>
+        // 데이터 설정 (score: 활동 점수)
         const surveyData = [
             {
                 id: "malacca",
@@ -182,17 +200,20 @@
                     { 
                         title: "🚌 가이드 투어 갈래!", 
                         desc: "설명도 듣고, 밤에 야경이랑 배도 탈 수 있어. (12시간 소요)",
-                        value: "말라카 투어 (하루 풀코스)" 
+                        type: "tour", 
+                        score: 2 
                     },
                     { 
                         title: "🚗 우리끼리 자유여행 갈래!", 
                         desc: "그랩 빌려서 편하게 가고, 보고 싶은 것만 딱 보자.",
-                        value: "말라카 자유여행 (프라이빗 밴)" 
+                        type: "free", 
+                        score: 1 
                     },
                     { 
                         title: "🙅‍♀️ 너무 멀다, 안 갈래!", 
                         desc: "차 오래 타는 거 싫어. 그냥 시내에서 놀자.",
-                        value: "말라카 패스 (시내 휴식)" 
+                        type: "none", 
+                        score: 0 
                     }
                 ]
             },
@@ -204,17 +225,20 @@
                     { 
                         title: "✨ 반딧불 투어 (저녁 코스)", 
                         desc: "핑크 모스크 + 몽키힐 + 반딧불 + 블루티어스 다 볼래!",
-                        value: "반딧불 투어 (저녁 포함)" 
+                        type: "tour", 
+                        score: 2 
                     },
                     { 
                         title: "📸 핑크 모스크만 (자유)", 
                         desc: "반딧불 필요 없어. 낮에 모스크 가서 사진만 찍고 올래.",
-                        value: "핑크 모스크만 (자유여행)" 
+                        type: "free", 
+                        score: 1 
                     },
                     { 
                         title: "🙅‍♀️ 관심 없다", 
                         desc: "사원도, 벌레도 싫어. 안 갈래.",
-                        value: "푸트라자야 패스" 
+                        type: "none", 
+                        score: 0 
                     }
                 ]
             },
@@ -226,19 +250,22 @@
                     { 
                         title: "🚠 시원한 산바람 쐬러 갈래!", 
                         desc: "케이블카도 타고 아울렛 구경도 하자.",
-                        value: "겐팅 하일랜드 GO" 
+                        type: "yes", 
+                        score: 1 
                     },
                     { 
                         title: "🙅‍♀️ 산은 됐다", 
                         desc: "높은 데 무서워/귀찮아. 시내 쇼핑몰이 더 좋아.",
-                        value: "겐팅 하일랜드 패스" 
+                        type: "no", 
+                        score: 0 
                     }
                 ]
             }
         ];
 
         let currentStep = 0;
-        let selections = {};
+        let userSelections = {}; // 선택한 타입 저장 (tour, free, none 등)
+        let totalScore = 0; // 총 활동 점수
 
         function startSurvey() {
             document.getElementById('start-screen').classList.add('hidden');
@@ -250,7 +277,6 @@
             const q = surveyData[currentStep];
             const area = document.getElementById('question-area');
             
-            // 진행바 업데이트
             document.getElementById('progress').style.width = `${((currentStep + 1) / surveyData.length) * 100}%`;
 
             let html = `
@@ -260,7 +286,7 @@
 
             q.options.forEach(opt => {
                 html += `
-                    <div class="option-card" onclick="selectOption('${opt.value}')">
+                    <div class="option-card" onclick="selectOption('${q.id}', '${opt.type}', ${opt.score})">
                         <div class="option-title">${opt.title}</div>
                         <div class="option-desc">${opt.desc}</div>
                     </div>
@@ -270,9 +296,9 @@
             area.innerHTML = html;
         }
 
-        function selectOption(value) {
-            const qId = surveyData[currentStep].id;
-            selections[qId] = value;
+        function selectOption(questionId, type, score) {
+            userSelections[questionId] = type;
+            totalScore += score;
 
             currentStep++;
             if (currentStep < surveyData.length) {
@@ -286,19 +312,59 @@
             document.getElementById('survey-screen').classList.add('hidden');
             document.getElementById('result-screen').classList.remove('hidden');
 
-            const resultList = document.getElementById('result-list');
-            resultList.innerHTML = `
-                <div class="result-box">
-                    <div class="result-label">1. 말라카</div>
-                    <div class="result-value">${selections.malacca}</div>
+            // 1. 총평 로직 (점수에 따라 타이틀과 설명 결정)
+            let title = "";
+            let body = "";
+
+            if (totalScore <= 2) {
+                title = "☕ 여유 있는 일정이<br>잘 어울리시는 스타일이에요 😊";
+                body = "이동과 체력 소모를 줄이고, 쿠알라룸푸르와 몽키아라 중심으로 천천히 즐기시는 코스를 추천드립니다.";
+            } else if (totalScore <= 4) {
+                title = "⚖️ 여유와 구경을 균형 있게<br>섞은 일정이 좋겠어요 🙌";
+                body = "핵심 관광지는 놓치지 않되, 하루에 너무 많은 곳을 넣기보다는 중간중간 쉬는 시간을 넣는 구성이 잘 맞습니다.";
+            } else {
+                title = "💪 꽤 알차고 활동적인 여행도<br>괜찮으신 스타일이네요!";
+                body = "체력에 무리가 가지 않도록 휴식 시간을 적당히 넣으면서, 데이투어와 근교 일정을 적극적으로 활용해 볼 수 있습니다.";
+            }
+
+            // 2. 상세 선택 요약 로직
+            const items = [];
+            const { malacca, putra, genting } = userSelections;
+
+            // 말라카 요약
+            if (malacca === "none") {
+                items.push("• <b>말라카</b>는 이번 여행에서는 가지 않는 것으로 선택하셨어요.");
+            } else if (malacca === "tour") {
+                items.push("• <b>말라카</b> 데이투어(12시간 내외)의 긴 일정도 한 번 경험해 보고 싶으신 것으로 보입니다.");
+            } else if (malacca === "free") {
+                items.push("• <b>말라카</b>는 이번이 아니라, 다음에 여유 있을 때 자유여행으로 가보는 쪽에 더 마음이 가세요.");
+            }
+
+            // 푸트라자야 요약
+            if (putra === "free") {
+                items.push("• <b>푸트라자야 핑크모스크</b>는 가볍게 Grab을 타고 가족끼리만 다녀오는 자유여행 코스를 선호하십니다.");
+            } else if (putra === "tour") {
+                items.push("• 핑크모스크와 반딧불, 저녁식사까지 포함된 <b>푸트라자야 투어</b> 패키지에 관심이 있으신 것으로 보입니다.");
+            } else if (putra === "none") {
+                items.push("• <b>푸트라자야/핑크모스크</b>는 이번 여행에서는 꼭 가지 않아도 괜찮다고 생각하고 계세요.");
+            }
+
+            // 겐팅 요약
+            if (genting === "yes") {
+                items.push("• 케이블카와 고지대 쇼핑몰이 있는 <b>겐팅하일랜드</b>도 한 번쯤 가보고 싶은 일정으로 선택하셨습니다.");
+            } else {
+                items.push("• <b>겐팅하일랜드</b>는 이번 여행에서는 가지 않는 쪽으로 선택하셨어요.");
+            }
+
+            // 3. HTML 조립
+            const resultContent = document.getElementById('result-content');
+            resultContent.innerHTML = `
+                <div class="result-header">
+                    <div class="result-type-title">${title}</div>
+                    <div class="result-type-desc">${body}</div>
                 </div>
-                <div class="result-box">
-                    <div class="result-label">2. 푸트라자야 & 반딧불</div>
-                    <div class="result-value">${selections.putra}</div>
-                </div>
-                <div class="result-box">
-                    <div class="result-label">3. 겐팅 하일랜드</div>
-                    <div class="result-value">${selections.genting}</div>
+                <div class="result-list-box">
+                    ${items.map(item => `<div class="result-item">${item}</div>`).join('')}
                 </div>
             `;
         }
